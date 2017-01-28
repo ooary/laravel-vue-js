@@ -14,7 +14,7 @@ class LessonsController extends Controller
                  return response()->json(['message'=>'get data success',
                                     'lessons'=>$lesson]);
         }else{
-                $lesson = Lesson::paginate(20);
+                $lesson = Lesson::orderBy('created_at','DESC')->paginate(20);
                  return response()->json(['message'=>'get data success',
                                     'lessons'=>$lesson]);
         }

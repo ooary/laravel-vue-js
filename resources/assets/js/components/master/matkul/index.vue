@@ -16,11 +16,22 @@
       </tr>
     </thead>
     <tbody>
-        <matkul-data v-for="lessonValue in lessons" :lessons="lessonValue" @update-data="fetchData" @deleteMatkul="deleteData"keep-alive></matkul-data>
+        <matkul-data v-for="lessonValue in lessons" :key="lessonValue.index" :lessons="lessonValue" @update-data="fetchData" @deleteMatkul="deleteData"keep-alive></matkul-data>
       
     </tbody>
   </table>
-  
+  <div>
+   <div class="pagination">
+            <button class="btn btn-default" @click="fetchData(pagination.prev_page_url)"
+                    :disabled="!pagination.prev_page_url">
+                Previous
+            </button>
+            <span>Page {{pagination.current_page}} of {{pagination.last_page}}</span>
+            <button class="btn btn-default" @click="fetchData(pagination.next_page_url)"
+                    :disabled="!pagination.next_page_url">Next
+            </button>
+        </div>
+        </div>
 </div>
   
 </template>
@@ -44,43 +55,49 @@
             },
             lessons:[],
             loading:false,
-            query:''
+            query:'',
+            pagination:{}
         }
        },
        methods:{
             fetchData(page_url){
-              console.log(page_url)
-              page_url = page_url || '/api/lessons'
-              if(this.query !=''){
-                this.loading = true
-                  console.log(this.query)
+                 console.log(page_url)
+                   page_url = page_url || '/api/lessons'
+                     if(this.query !=''){
+                        this.loading = true
+                        console.log(this.query)
+                         axios.get('api/lessons?query='+this.query).then(response=>{
+                            console.log(response.data)
+                            this.lessons = response.data.lessons;
+                            console.log(this.lessons);
+                            if(response.data.lessons== ''){
+                                alert(this.query + ' Tidak di Temukan')
+                              }
+                            this.loading=false
+                        },response=>{
 
-                  axios.get('api/lessons?query='+this.query).then(response=>{
-                      console.log(response.data)
-                      this.lessons = response.data.lessons;
-                      console.log(this.lessons);
-                      if(response.data.lessons== ''){
-                          alert(this.query + ' Tidak di Temukan')
-                        }
-                      this.loading=false
-                  },response=>{
+                            console.log(response.data);
+                        })
+                    }else{
 
-                      console.log(response.data);
-                  })
-              }else{
-
-                 axios.get('api/lessons/').then(response=>{
-                    console.log(response.data.lessons.data)
-                    this.lessons = response.data.lessons.data;
-                    console.log(this.lessons);
-                },response=>{
-                    console.log(response.data);
-                })
-              }
+                       axios.get(page_url).then(response=>{
+                          console.log(response.data.lessons.data)
+                          this.lessons = response.data.lessons.data;
+                          //make pagination
+                          //https://dotdev.co/simple-vue-js-pagination-with-laravel-33b7cfbb5ccc#.r91silp7d
+                          this.makePagination(response.data.lessons);
+                          console.log(this.lessons);
+                      },response=>{
+                          console.log(response.data);
+                      })
+                    }
                
             },
             addData(value){
-                this.lessons.push(value)
+              //unshift nambah array bagian pertama
+              //push nambah array bagian pertama dan akhir, biasanya terakhir
+                this.lessons.unshift(value)
+                this.fetchData()
             },
             deleteData(value){
                 axios.delete('api/lessons/'+value.id).then(response=>{
@@ -88,7 +105,15 @@
                     this.lessons.splice(index,1);
                     alert(response.data.message);
                 })
-            }
+            },
+            makePagination(response){
+                let pagination = {
+                    current_page: response.current_page,
+                    last_page: response.last_page,
+                    next_page_url: response.next_page_url,
+                    prev_page_url: response.prev_page_url
+                }
+                this.pagination = pagination            }
        },watch:{
             query(value){
                 if(value==''){
