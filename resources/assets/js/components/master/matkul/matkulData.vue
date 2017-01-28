@@ -38,7 +38,7 @@
 			},
 			updateMatkul(old,newValue){
 				 axios.put('api/lesson/'+old.id,newValue).then(response=>{
-					console.log(response.data)
+					console.log(returnsponse.data)
 					this.$emit('update-data')
 					this.cancelEdit();
 				},response=>{

@@ -2,6 +2,12 @@
 <div>
    <add-matkul @add-data="addData"></add-matkul>
    <br>
+   <input type="text" v-model="query" class="form-control"> <br>
+   <button class="btn btn-warning" v-if="!loading" @click.prevent="fetchData(query)">Search</button>
+   <button class="btn btn-warning" v-if="loading" disabled="disabled">Search...</button>
+
+
+   <hr>
      <table class="table table-bordered">
     <thead>
       <tr>
@@ -14,6 +20,7 @@
       
     </tbody>
   </table>
+  
 </div>
   
 </template>
@@ -35,18 +42,42 @@
             lesson:{
                 lesson_name:''
             },
-            lessons:[]
+            lessons:[],
+            loading:false,
+            query:''
         }
        },
        methods:{
-            fetchData(){
-                axios.get('api/lessons').then(response=>{
-                    console.log(response.data)
-                    this.lessons = response.data.lessons;
+            fetchData(page_url){
+              console.log(page_url)
+              page_url = page_url || '/api/lessons'
+              if(this.query !=''){
+                this.loading = true
+                  console.log(this.query)
+
+                  axios.get('api/lessons?query='+this.query).then(response=>{
+                      console.log(response.data)
+                      this.lessons = response.data.lessons;
+                      console.log(this.lessons);
+                      if(response.data.lessons== ''){
+                          alert(this.query + ' Tidak di Temukan')
+                        }
+                      this.loading=false
+                  },response=>{
+
+                      console.log(response.data);
+                  })
+              }else{
+
+                 axios.get('api/lessons/').then(response=>{
+                    console.log(response.data.lessons.data)
+                    this.lessons = response.data.lessons.data;
                     console.log(this.lessons);
                 },response=>{
                     console.log(response.data);
                 })
+              }
+               
             },
             addData(value){
                 this.lessons.push(value)
@@ -57,6 +88,12 @@
                     this.lessons.splice(index,1);
                     alert(response.data.message);
                 })
+            }
+       },watch:{
+            query(value){
+                if(value==''){
+                  this.fetchData()
+                }
             }
        }
 

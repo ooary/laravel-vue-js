@@ -7,10 +7,18 @@ use App\Lesson;
 class LessonsController extends Controller
 {
     //
-    public function getLesson(){
-	$lesson = Lesson::all();
-    	return response()->json(['message'=>'get data success',
-    							 'lessons'=>$lesson]);
+    public function getLesson(Request $request){
+       
+        if($request->has('query')){
+              $lesson = Lesson::where('lesson_name','LIKE','%'.$request->get('query').'%')->get();
+                 return response()->json(['message'=>'get data success',
+                                    'lessons'=>$lesson]);
+        }else{
+                $lesson = Lesson::paginate(20);
+                 return response()->json(['message'=>'get data success',
+                                    'lessons'=>$lesson]);
+        }
+
     }
     public function updateLesson(Request $request,$id){
     	$lesson = Lesson::findOrfail($id);
@@ -18,6 +26,7 @@ class LessonsController extends Controller
     	return response()->json(['message'=>'Update success']);
     }
     public function storeLesson(Request $request){
+        
         $this->validate($request,['lesson_name'=>'required']);
 
         $lesson = Lesson::create(['lesson_name'=>$request->input('lesson_name')]);
